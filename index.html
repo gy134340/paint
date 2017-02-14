@@ -254,7 +254,7 @@ function setCubes(){
 		var cube = new THREE.Mesh( geometry, material );
 		var x = Math.random() * 10000 - 5000;
 		var y = Math.random() * 10000 - 5000;
-		var z = Math.random() * 8000 - 4000;
+		var z = Math.random() * 10000 - 4000;
 		cube.position.set(x, y, z);
 		var subRotate = new TWEEN.Tween({domElement:cube}).to({}, 12000).onUpdate(updateCube);
 						
