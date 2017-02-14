@@ -45,10 +45,13 @@
 			-webkit-transform:translate(-50%,-50%);
 			transform:translate(-50%,-50%);
 			border: 1px solid #fff;
+			-webkit-transition: all linear 1s;
+			-o-transition: all linear 1s;
+			transition: all linear 1s;
 		}
 		.event{
 			position: absolute;
-			top:88%;
+			top:78%;
 			left:50%;
 			-webkit-transform:translate(-50%,-50%);
 			transform:translate(-50%,-50%);
@@ -66,10 +69,14 @@
 			text-align: center;
 			-webkit-box-flex:1;
 			box-flex:1;
+			-webkit-transition: all linear 0.5s;
+			-o-transition: all linear 0.5s;
+			transition: all linear 0.5s;
 		}
 		.event .sub:hover{
 			border: 1px solid #ccc;
-			color:#ccc;
+			background-color: #ccc;
+			color:#000;
 		}
 		.sub p{
 			line-height: 30px;
@@ -79,22 +86,80 @@
 		button.drawing-board-control-navigation-reset{
 			display: none;
 		}
+		.footer{
+			width: auto;
+			left:50%;
+			-webkit-transform:translateX(-50%);
+			transform: translateX(-50%);
+			height:30px;
+			bottom: 0;
+			color:#e78170;
+			font-size: 12px;
+			position: absolute;
+			display: -webkit-box;
+			display: box;
+		}
+		.footer .copyright{
+			width: auto;
+			-webkit-box-flex:1;
+			box-flex:1;
+		}
+		.footer .copyright p{
+			display:inline-block;
+			padding: 0 20px 0 10px;
+			color:#fff;
+			line-height: 30px;
+		}
+		.footer .footer_link{
+			-webkit-box-flex:1;
+			box-flex:1;
+		}
+		.footer .footer_link .link_wrap{
+			display: -webkit-box;
+			display: box;
+		}
+		.footer .footer_link .sub_link{
+			-webkit-box-flex:1;
+			box-flex:1;
+		}
+		.footer .sub_link a{
+			color:#fff;
+			display: inline-block;
+			line-height: 27px;
+			padding: 3px 10px 0 3px;
+		}
+		.footer .sub_link a:hover{
+			cursor: pointer;
+			color: #ccc;
+		}
 
 	</style>
 </head>
 <body>
 <div class="container">
-	<p class="title">Please paint something in canavs</p>
+	<p class="title">Painting . . . </p>
 	<div id="paint">
-		<div class="event">
+		<!-- <div class="event">
 			<div class="reset sub drawing-board-control-navigation-reset"><p>Reset</p></div>
 			<div class="go sub"><p> G o </p></div>
-		</div>
+		</div> -->
 	</div>
-	<!-- <div class="event">
+	<div class="event">
 		<div class="reset sub drawing-board-control-navigation-reset"><p>Reset</p></div>
 		<div class="go sub"><p> G o </p></div>
-	</div> -->
+	</div>
+
+	<div class="footer">
+		<div class="copyright">
+			<p>&copy 2017-forever GY</p>
+		</div>
+		<div class="footer_link">
+			<div class="link_wrap">
+				<div class="sub_link"><a href="https://github.com/gy134340">Github</a></div>
+				<div class="sub_link"><a href="https://github.com/gy134340/particle">项目地址</a></div>
+			</div>
+		</div>
+	</div>
 </div>
 </body>
 <script src="js/three.min.js"></script>
@@ -106,12 +171,18 @@
 <script src="js/libs/drawingboard.min.js"></script>
 
 <script type="text/javascript">
-
+/**
+ *
+ * @author gy 
+ * 
+ * https://github.com/gy134340
+ */
 
 var container,stats;	
-var canvas;
+var canvas, board;				// 存储画布
 var camera,scene,renderer,controls;
 var raycaster;			// 点击发出的一条射线
+var isPainted = false;
 var mouse = new THREE.Vector2();	// 点向量
 mouse.x = 0;
 mouse.y = 0;
@@ -121,16 +192,15 @@ var cubes = [];
 var winWidth = window.innerWidth;
 var winHeight = window.innerHeight;
 
-
-
 function init () {
 	container = document.querySelectorAll('.container')[0];
+	board = document.querySelectorAll('#paint')[0];
 
 	scene = new THREE.Scene();
 
 	// 相机
-	camera = new THREE.PerspectiveCamera(75, winWidth / winHeight, 1, 1000);
-	camera.position.set(0, 0, 1000);
+	camera = new THREE.PerspectiveCamera(75, winWidth / winHeight, 1, 10000);
+	camera.position.set(0, 0, 1500);
 	camera.lookAt(0, 0, 0);
 
 	// 光
@@ -170,43 +240,21 @@ function init () {
 	window.addEventListener( 'resize', onWindowResize, false );
 }
 
-function addBoard(){
-	var simpleBoard = new DrawingBoard.Board('paint', {
-		background:'rgba(0,0,0,0.1)',
-		color:'#ccc',
-		size:2,
-		controls: [
-			{ Navigation: { back: false, forward: false } },
-		],
-		webStorage: false
-	});
-
-	$("body").on('click','.event .reset', function(e){
-		e.preventDefault();
-		$("button.drawing-board-control-navigation-reset").trigger('click');
-	});
-
-	$("body").on('click','.event .go', function(e){
-		e.preventDefault();
-		var dt = getTextData();
-		cubesLocation(dt);
-	});
-}
-
 var updateCube = function(){
 	this.domElement.rotation.x += Math.random() * 0.01;
 	this.domElement.rotation.y += Math.random() * 0.01;
 	this.domElement.rotation.z += Math.random() * 0.01;
 }
 
+// x156289
 function setCubes(){
 	var geometry = new THREE.OctahedronGeometry(15, 0);
-	var material = new THREE.MeshPhongMaterial( {color: 0x156289, wireframe: true} );
+	var material = new THREE.MeshPhongMaterial( {color: 0x68A6D3, wireframe: true} );
 	for(var i = 0; i <  10000; i++ ){
 		var cube = new THREE.Mesh( geometry, material );
 		var x = Math.random() * 10000 - 5000;
 		var y = Math.random() * 10000 - 5000;
-		var z = Math.random() * 20 - 10;
+		var z = Math.random() * 8000 - 4000;
 		cube.position.set(x, y, z);
 		var subRotate = new TWEEN.Tween({domElement:cube}).to({}, 12000).onUpdate(updateCube);
 						
@@ -217,9 +265,38 @@ function setCubes(){
 	}
 }
 
+function addBoard(){
+	var simpleBoard = new DrawingBoard.Board('paint', {
+		background:'rgba(0,0,0,0)',
+		color:'#ccc',
+		size:2,
+		controls: [
+			{ Navigation: { back: false, forward: false } },
+		],
+		webStorage: false
+	});
+
+	$("body").on('click','.event .reset', function(e){
+		e.preventDefault();
+		isPainted = false;
+		$(board).fadeIn(700);
+		$("button.drawing-board-control-navigation-reset").trigger('click');
+	});
+
+	$("body").on('click','.event .go', function(e){
+		e.preventDefault();
+
+		isPainted = true;
+		$(board).fadeOut(700);
+		var dt = getPaintData();
+		cubesLocation(dt);
+	});
+}
+
+
 // processed text data
-function getTextData(){
-	var canvas = document.querySelectorAll('.drawing-board-canvas')[0];
+function getPaintData(){
+	canvas = document.querySelectorAll('.drawing-board-canvas')[0];
 	var ctx = canvas.getContext("2d");
 	var imgData = ctx.getImageData(0,0,canvas.width,canvas.height);
 	var data = imgData.data;
@@ -248,28 +325,30 @@ function cubesLocation(dt){
 	var cWidth = dt.width;
 	var cHeight = dt.height;
 	var data = dt.data;
-	var xSpace = Math.round(1000 / cWidth);
-	var ySpace = Math.round(1000 / cHeight)
+	var xSpace = Math.round(2000 / cWidth);
+	var ySpace = Math.round(1500 / cHeight)
 	var cubeIndex = 0;
 
-	for(var j = 0; j < cHeight; j++){
+	for(var j = 0; j < cHeight; j+=2){
 		for(var i = 0; i < cWidth; i++){
 			var index = j * cWidth + i;
 			if(data[index] === 1){
 				var cube = cubes[cubeIndex];
 				if(cube){
-					cube.scale.x = cube.scale.y = cube.scale.z = 0.1;
-					var poiX = i * xSpace - 500;
-					var poiY = 1350 - j * ySpace -500;
-					var inX = Math.random() * 600 - 300;
-					var inY = Math.random() * 300 - 300;
+	
+					var poiX = i * xSpace - 1000 + Math.random() * 80;
+					var poiY = 600 - j * ySpace + Math.random() * 80;
+					var poiZ = Math.random() * 10;
+					var inX = Math.random() * 400 - 300 + Math.random() * 500;
+					var inY = Math.random() * 400 - 50 - Math.random() * 500;
+					var inZ = Math.random() * 100 + 1500;
 
 					var cubeSpread = new TWEEN.Tween(cube.position)
-								.to({x:poiX, y:poiY, z:50}, Math.random() * 500 + 3000 )
-								.easing( TWEEN.Easing.Exponential.InOut );
+								.to({x:poiX, y:poiY, z:poiZ}, Math.random() * 1000 + 2000 )
+								.easing( TWEEN.Easing.Exponential.In );
 					var cubeIn  = new TWEEN.Tween(cube.position)
-								.to({x:inX, y:inY, z:150}, Math.random() * 500 + 2000 )
-								.easing( TWEEN.Easing.Exponential.InOut );
+								.to({x:inX, y:inY, z:inZ}, Math.random() * 500 + 1500 )
+								.easing( TWEEN.Easing.Exponential.Out );
 					cubeIn.chain(cubeSpread);
 					cubeIn.start();
 					cubeIndex++;
@@ -279,150 +358,30 @@ function cubesLocation(dt){
 	}		
 };
 
-// 方块不够组成文字，添加额外的方块
-function addExtraCubes(num, extras){
-	var textCubes = [];
-	var amount = num + 2000;		// add extra amout, num值正负都有可能
-
-	var geometry = new THREE.BoxGeometry(100, 100, 100);
-	for (var i = 0; i < amount; i++) {
-		var textures = [];
-		for(var j = 0; j < 6; j++){
-			var rand = Math.ceil(Math.random() * 96);
-			textures[j] = cubeTextures[rand];
-		}				
-		var materials = [
-		    new THREE.MeshPhongMaterial( { map: textures[0] } ), // right
-		    new THREE.MeshPhongMaterial( { map: textures[1] } ), // left
-		    new THREE.MeshPhongMaterial( { map: textures[2] } ), // top
-		    new THREE.MeshPhongMaterial( { map: textures[3] } ), // bottom
-		    new THREE.MeshPhongMaterial( { map: textures[4] } ), // back
-		    new THREE.MeshPhongMaterial( { map: textures[5] } )  // front
-		];
-		
-		var cubeMaterial = new THREE.MultiMaterial( materials );
-		var object = new THREE.Mesh( geometry, cubeMaterial );
-		object.position.x = Math.random() * 12000 - 6000;
-		object.position.y = Math.random() * 5400 - 2700;
-		object.position.z = Math.random() * 1000 + 1200;
-		extras.push(object);
-		scene.add(object);
-	}
-	textCubes = textCubes.concat(cubes,extras);
-	return textCubes;
-}
-
-// 不组成文字的方块定位
-function extrasLocation(textCubes, cubeIndex){
-	for(var k = cubeIndex; k < textCubes.length; k++){
-		var subCube = textCubes[k];
-		if(!subCube.userData.isInteracted){
-			subCube.scale.x = subCube.scale.y = subCube.scale.z = 0.08;
-			var subX = Math.random() * 3000;
-			var subY = Math.random() * 1350;
-			var inX = Math.random() * 600 + 1200;
-			var inY = Math.random() * 300 + 400;
-
-			var crowdSpread = new TWEEN.Tween(subCube.position)
-								.to({x:subX, y:subY, z:50}, Math.random() * 500 + 3000 )
-								.easing( TWEEN.Easing.Exponential.InOut );
-			var crowdIn  = new TWEEN.Tween(subCube.position)
-							.to({x:inX, y:inY, z:150}, Math.random() * 500 + 2000 )
-							.easing( TWEEN.Easing.Exponential.InOut );
-			crowdIn.chain(crowdSpread);
-			crowdIn.start();
-				
-			var subRotate = new TWEEN.Tween({domElement:subCube})
-					.to({}, 12000 )
-					.onUpdate(updateTextCube)
-					.easing( TWEEN.Easing.Exponential.InOut )
-					.start();
-		}	
-	}
-}
-
-// 组成文字的方块定位
-function textCubesLocation(dt){
-	var cWidth = dt.width;
-	var cHeight = dt.height;
-	var data = dt.data;
-	var xSpace = Math.round(3000 / cWidth);
-	var ySpace = Math.round(1350 / cHeight)
-	var cubeIndex = 0;
-	var extraNum = dt.num - cubes.length;
-	var extras = [];
-	var textCubes = addExtraCubes(extraNum, extras);		// cubes and extras
-
-	for(var j = 0; j < cHeight; j++){
-		for(var i = 0; i < cWidth; i++){
-			var index = j * cWidth + i;
-			if(data[index] === 1){
-				var cube = textCubes[cubeIndex];
-				if(!cube.userData.isInteracted){
-					cube.scale.x = cube.scale.y = cube.scale.z = 0.1;
-					var poiX = i * xSpace;
-					var poiY = 1350 - j * ySpace;
-					var inX = Math.random() * 600 + 1200;
-					var inY = Math.random() * 300 + 400;
-
-					var cubeSpread = new TWEEN.Tween(cube.position)
-								.to({x:poiX, y:poiY, z:50}, Math.random() * 500 + 3000 )
-								.easing( TWEEN.Easing.Exponential.InOut );
-					var cubeIn  = new TWEEN.Tween(cube.position)
-								.to({x:inX, y:inY, z:150}, Math.random() * 500 + 2000 )
-								.easing( TWEEN.Easing.Exponential.InOut );
-					cubeIn.chain(cubeSpread);
-					cubeIn.start();
-
-					var textRotate = new TWEEN.Tween({domElement:cube})
-					.to({}, 12000 )
-					.onUpdate(updateTextCube)
-					.easing( TWEEN.Easing.Exponential.InOut )
-					.start();
-				}
-				cubeIndex++;		
-			}
-		}
-	}
-	extrasLocation(textCubes, cubeIndex);
-	return extras;			// note: extras should to be deleted
-}
-
-function restoreTextFormation(extras){
-	for(var i = 0; i < extras.length; i++){
-		scene.remove(extras[i]);
-	}
-
-	for(var j = 0; j < cubes.length; j++){
-		var tmp = cubes[j];
-
-		if(tmp.userData.isInteracted === false){
-			tmp.scale.x = tmp.scale.y = tmp.scale.z = 1;
-			tmp.rotation.x = tmp.rotation.y = tmp.rotation.z = 0;
-		}
-	}
-}
-
-function textFormation(time){
-	var imgData = getLogoData()
-	var dt = getTextData(imgData);
-	var extras = textCubesLocation(dt);
-
-	return new Promise(function(resolve,reject){
-		setTimeout(function(){
-			restoreTextFormation(extras);
-			resolve();
-		},time);
-	});
-}
 
 var theta = 0;
-var radius = 400;
+var radius = 4000;
 function render(){
-
-	// theta += 0.1;  // 自动渲染
-	// camera.position.x = radius * Math.sin( THREE.Math.degToRad( theta ) );
-	// camera.position.z = radius * Math.cos( THREE.Math.degToRad( theta ) );
+	
+	if(isPainted === true){
+		if(radius > 2000){
+			radius -= 8;
+		}
+		
+		theta += 0.05;  // 自动渲染
+		camera.position.x = radius * Math.sin( THREE.Math.degToRad( theta ) );
+		camera.position.z = radius * Math.cos( THREE.Math.degToRad( theta ) );
+		console.log('theta', theta);
+	}else{
+		if(radius < 4000){
+			radius += 3;
+		}else{
+			radius += 0.5;
+		}
+		theta = 0;  // 自动渲染
+		camera.position.x = radius * Math.sin( THREE.Math.degToRad( theta ) );
+		camera.position.z = radius * Math.cos( THREE.Math.degToRad( theta ) );
+	}
 	camera.lookAt(scene.position);
 	camera.updateProjectionMatrix();
 
