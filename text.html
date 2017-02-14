@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<title>three.js webgl - geometry hierarchy 2</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+	<style>
+		body {
+			background:#fff;
+			padding:0;
+			margin:0;
+			font-weight: bold;
+			overflow:hidden;
+		}
+	</style>
+</head>
+<body>
+
+<script src="js/three.min.js"></script>
+<script src="js/renderers/Projector.js"></script>
+<script src="js/libs/stats.min.js"></script>
+<script src="js/controls/TrackballControls.js"></script>
+<script src="js/libs/tween.min.js"></script>
+
+<script src="js/shaders/ConvolutionShader.js"></script>
+<script src="js/shaders/CopyShader.js"></script>
+
+<script src="js/postprocessing/EffectComposer.js"></script>
+<script src="js/postprocessing/RenderPass.js"></script>
+<script src="js/postprocessing/MaskPass.js"></script>
+<script src="js/postprocessing/BloomPass.js"></script>
+<script src="js/postprocessing/ShaderPass.js"></script>
+
+<script src="js/Detector.js"></script>
+
+
+
+<script>
+
+
+	var container, stats;
+
+	var camera, scene, renderer,dirLight, hemiLight;
+
+	var geometry, root;
+
+	var mouse = new THREE.Vector2();
+	var intersects;
+
+	var controls;
+
+	var windowHalfX = window.innerWidth / 2;
+	var windowHalfY = window.innerHeight / 2;
+
+	var object;
+
+	var cx = 2650, cy = 600;
+
+	// for font
+	var cameraTarget;
+	var group, textMesh1, textGeo, material;
+	var text = "FIND YOUR RED", height = 20, size = 15, hover = 30,
+	curveSegments = 4, bevelThickness = 0, bevelSize = 0,
+	curveSegments = 4, bevelThickness = 1, bevelSize = 1.5,
+	bevelEnabled = true, font = undefined, fontName = "optimer",
+	fontWeight = "regular"; 	// normal bold
+
+
+
+
+	init();
+	animate();
+
+	function init() {
+
+		container = document.createElement( 'div' );
+		document.body.appendChild( container );
+
+		camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 1, 15000 );
+		camera.position.set( cx, cy,1200  );
+
+		//camera.position.z = 0;
+
+		//for font
+
+//		camera = new THREE.PerspectiveCamera( 60, widow.innerWidth / window.innerHeight, 1, 15000 );
+//		camera.position.set( 0, 400, 700 );
+
+		cameraTarget = new THREE.Vector3(0, 0, 0 );
+		//for font close
+
+
+
+		scene = new THREE.Scene();
+		//camera.lookAt( 0,0,0 );
+
+		setCubes(576, 1, 200, scene);
+
+
+
+
+		/**************************LIGHTS*************************/
+		hemiLight = new THREE.HemisphereLight( 0xffffff, 0xffffff, 0.5 );
+		//hemiLight.color.setHSL( 0.6, 1, 0.6 );
+		//hemiLight.groundColor.setHSL( 0.095, 1, 0.75 );
+		hemiLight.position.set( 1, 1,1 );
+		hemiLight.position.multiplyScalar( 500 );
+		scene.add( hemiLight );
+
+		dirLight = new THREE.DirectionalLight( 0xcccccc, 0.5 );
+		//dirLight.color.setHSL( 0.1, 1, 0.95 );
+		dirLight.position.set( 0, 0,1 );
+		dirLight.position.multiplyScalar( 5000 );
+		scene.add( dirLight );
+
+		/******************************************************************/
+		// for font
+		material = new THREE.MultiMaterial( [
+			new THREE.MeshPhongMaterial( { color: 0xff4c3e, shading: THREE.FlatShading } ), // front
+			new THREE.MeshPhongMaterial( { color: 0xff4c3e, shading: THREE.SmoothShading } ) // side
+		] );
+
+		group = new THREE.Group();
+		group.position.y = 550;
+		group.position.x = 2650;
+		group.position.z = 0;
+
+		scene.add( group );
+
+		var loader = new THREE.FontLoader();
+		loader.load( 'fonts/' + fontName + '_' + fontWeight + '.typeface.json', function ( response ) {
+			font = response;
+			createText();
+		} );
+
+
+
+		//for font close
+		renderer = new THREE.WebGLRenderer({ antialias: true });
+		renderer.setClearColor( 0xffffff );
+		renderer.setPixelRatio( window.devicePixelRatio );
+		renderer.setSize( window.innerWidth, window.innerHeight );
+		renderer.sortObjects = false;
+		container.appendChild( renderer.domElement );
+
+		stats = new Stats();
+		container.appendChild( stats.dom );
+
+		//
+		controls = new THREE.TrackballControls( camera, renderer.domElement );
+		controls.rotateSpeed = 0.5;
+
+		renderer.domElement.addEventListener( 'mousedown', onDocumentMouseDown, false );
+		document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+		//document.addEventListener( 'mousedown', onDocumentMouseDown, false );
+		//document.addEventListener( 'touchstart', onDocumentTouchStart, false );
+		window.addEventListener( 'resize', onWindowResize, false );
+	}
+
+	function setCubes(amount, axis, shift, parent){
+		//set texture for 6 sides
+		var textures=new Array(0);
+		for(var j=0;j<6;j++){
+			var rand = Math.floor(Math.abs(Math.random()*6+1));
+			var texture= 'textures/lips/'+rand+'.jpg';
+			textures[j] = new THREE.TextureLoader().load( texture );
+		}
+		for ( var i = 0; i < amount; i ++ ) {
+
+			//cube
+			geometry = new THREE.BoxGeometry(100, 100, 100);
+			var materials = [
+				new THREE.MeshPhongMaterial( { map: textures[0] } ), // right
+				new THREE.MeshPhongMaterial( { map: textures[1] } ), // left
+				new THREE.MeshPhongMaterial( { map: textures[2] } ), // top
+				new THREE.MeshPhongMaterial( { map: textures[3] } ), // bottom
+				new THREE.MeshPhongMaterial( { map: textures[4] } ), // back
+				new THREE.MeshPhongMaterial( { map: textures[5] } )  // front
+			];
+			//MeshBasicMaterial
+			//var material = new THREE.MeshPhongMaterial( { map: THREE.ImageUtils.loadTexture('images/crate.jpg') } );
+			var cubeMaterial = new THREE.MultiMaterial( materials );
+			object = new THREE.Mesh( geometry, cubeMaterial );
+
+			//var material = new THREE.MeshBasicMaterial( { map: new THREE.TextureLoader().load( 'textures/lips/1.jpg' ) } );
+			//object = new THREE.Mesh( geometry, material );
+
+			scene.add( object );
+		}
+
+		cubeFormation();
+	}
+
+	function planeFormation(){
+		var amountX =18;
+		var amountZ = 32;
+		var separation = 200;
+		var offsetX = ( ( amountX - 1 ) * separation ) / 2;
+		var offsetZ = ( ( amountZ - 1 ) * separation ) / 2;
+		var positions=[];
+
+		for ( var i = 0; i < scene.children.length; i ++ ) {
+
+			var x = ( i % amountX ) * separation;
+			var z = Math.floor( i / amountX ) * separation;
+			var y = ( Math.sin( x * 0.5 ) + Math.sin( z * 0.5 ) ) * 200;
+
+			positions.push( x - offsetX, y, z - offsetZ );
+
+			new TWEEN.Tween( scene.children[i].position )
+					.to( {
+						y: positions[i*3],
+						z: positions[i*3+1],
+						x: positions[i*3+2]
+					}, Math.random() * 2000 + 2000 )
+					.easing( TWEEN.Easing.Exponential.InOut )
+					.start();
+		}
+	}
+
+	function sphereFormation(){
+		var radius = 1050;
+		var positions = [];
+
+		for ( var i = 0; i < scene.children.length; i ++ ) {
+
+			var phi = Math.acos( -1 + ( 2 * i ) / scene.children.length );
+			var theta = Math.sqrt( scene.children.length * Math.PI ) * phi;
+
+			positions.push(
+					radius * Math.cos( theta ) * Math.sin( phi ),
+					radius * Math.sin( theta ) * Math.sin( phi ),
+					radius * Math.cos( phi )
+			);
+
+			new TWEEN.Tween( scene.children[i].position )
+					.to( {
+						x: positions[i*3],
+						y: positions[i*3+1],
+						z: positions[i*3+2]
+					}, Math.random() * 2000 + 2000 )
+					.easing( TWEEN.Easing.Exponential.InOut )
+					.start();
+		}
+
+	}
+
+	function cubeRandomFormation(){
+
+
+		for ( var i = 0; i < scene.children.length; i ++ ) {
+
+			new TWEEN.Tween( scene.children[i].position )
+					.to( {
+						x: Math.random() * 1500 ,
+						y: Math.random() * 1500 ,
+						z: Math.random() * 1500
+					}, Math.random() * 2000 + 2000 )
+					.easing( TWEEN.Easing.Exponential.InOut )
+					.start();
+
+			new TWEEN.Tween( scene.children[i].rotation ).to( {
+				x: Math.random() * 2 * Math.PI,
+				y: Math.random() * 2 * Math.PI,
+				z: Math.random() * 2 * Math.PI }, 2000 )
+					.easing( TWEEN.Easing.Elastic.Out).start();
+
+		}
+	}
+
+	function cubeFormation(){
+		var amount = 64;
+		var separation = 150;
+		var offset = ( ( amount - 1 ) * separation ) / 2;
+		var positions = [];
+
+		for (var i=0;i<scene.children.length;i++){
+			//transition(root.children[i]);
+			var x = ( i % amount ) * separation;
+			var y = Math.floor( ( i / amount ) % amount ) * separation;
+			var z = Math.floor( i / ( amount * amount ) ) * separation;
+
+			//positions.push( x - offset, y - offset, z - offset );
+			positions.push( x , y , z  );
+
+			new TWEEN.Tween( scene.children[i].position )
+					.to( {
+						x: positions[i*3],
+						y: positions[i*3+1],
+						z: positions[i*3+2]
+					}, Math.random() * 2000 + 2000 )
+					.easing( TWEEN.Easing.Exponential.InOut )
+					.start();
+		}
+	}
+
+	function onDocumentTouchStart( event ) {
+
+		event.preventDefault();
+
+		event.clientX = event.touches[0].clientX;
+		event.clientY = event.touches[0].clientY;
+		onDocumentMouseDown( event );
+
+	}
+
+	function onDocumentMouseMove( event ) {
+
+		event.preventDefault();
+
+		mouse.x = ( event.clientX / renderer.domElement.clientWidth ) * 2 - 1;
+		mouse.y = - ( event.clientY / renderer.domElement.clientHeight ) * 2 + 1;
+
+		var raycaster = new THREE.Raycaster();
+
+		raycaster.setFromCamera( mouse, camera );
+
+		intersects = raycaster.intersectObjects( scene.children );
+
+
+		if ( intersects.length > 0 ) {
+			new TWEEN.Tween( intersects[0].object.position ).to( {
+				//x: Math.random() * 800 + 400,
+				//y: Math.random() * 800 + 400,
+				z: 500 }, 2000 )
+					.easing( TWEEN.Easing.Elastic.Out).start();
+
+			new TWEEN.Tween( intersects[ 0 ].object.rotation ).to( {
+				x: Math.random() * 2 * Math.PI,
+				y: Math.random() * 2 * Math.PI,
+				z: Math.random() * 2 * Math.PI }, 2000 )
+					.easing( TWEEN.Easing.Elastic.Out).start();
+		}
+	}
+
+
+	function onDocumentMouseDown( event ) {
+
+		event.preventDefault();
+
+		mouse.x = ( event.clientX / renderer.domElement.clientWidth ) * 2 - 1;
+		mouse.y = - ( event.clientY / renderer.domElement.clientHeight ) * 2 + 1;
+		var raycaster = new THREE.Raycaster();
+
+		raycaster.setFromCamera( mouse, camera );
+
+		intersects = raycaster.intersectObjects( scene.children );
+
+		console.log(mouse.x + "     " + mouse.y);
+
+	}
+
+
+	var lipstick = [
+		"RD501", "Ruby Copper", "鲜艳亮丽暖和红色","以拥有鲜艳红色的矿物赤铜矿命名",
+		"RD502", "Real Ruby", "亮澤啡紅調", "華麗雅緻紅調取名於瑰麗奪目的寶石",
+		"RD503", "Bloodstone", "深邃啡紅調", "取名自珍貴的紅色寶石玉髓",
+		"RD504", "Rouge Rum Punch", "深邃紫啡/紅啡調", "令人一見難忘的迷人深紅調",
+		"RD305", "Murrey", "冷豔珊瑚紅", "如少女般甜美的冷色系珊瑚紅",
+		"RD306", "Liaison", "帶橙調的柔紅色", "紅色及橙色的完美配搭",
+		"RD307", "First Bite", "明亮火橙色", "色調激烈明亮靈感源自一見鍾情的感覺",
+		"RD308", "Toffee Apple", "甜蜜亮麗暖和紅色", "名字靈感來自傳統甜點糖蘋果的亮澤糖層",
+		"RD309", "Coral Shore", "細膩暖和珊瑚紅", "色澤柔和如海中橙色和粉紅色的珊瑚",
+		"RD310", "Burning Up", "明亮桃紅色", "名字靈感源自害羞感覺青春、妙俏、熱情",
+		"RD311", "Crime of Passion", "暖和珊瑚紅", "令人着迷的鮮明珊瑚紅",
+		"RD312", "Poppy", "經典亮麗紅調", "活現罌粟花的鮮明紅色",
+		"RD713", "Hushed Tones", "帶粉紅調的暖和啡色", "恬靜文雅 溫暖柔和",
+		"RD714", "Sweet Desire", "鮮明啡調", "將愛慕之念具體化的瑰麗紅色",
+		"RD715", "Rose Crush", "柔和粉紅棕調", "此柔和粉紅色正是隱藏慾望的化身",
+		"RD716", "Red Queen", "偏粉紅色的高雅啡紅調", "沉實貴族般的雅緻紅色展現低調的權力"
+	];
+
+	function showDetail(index, obj) {
+		text = lipstick[index] + lipstick[index + 1] + lipstick[index + 2] + lipstick[index + 3];
+		var x = obj.position.x;
+		var y = obj.position.y;
+		group.position.x = x;
+		group.position.y = y;
+		createText();
+	}
+
+
+	function onWindowResize() {
+
+		windowHalfX = window.innerWidth / 2;
+		windowHalfY = window.innerHeight / 2;
+
+		camera.aspect = window.innerWidth / window.innerHeight;
+		camera.updateProjectionMatrix();
+
+		renderer.setSize( window.innerWidth, window.innerHeight );
+
+	}
+
+
+	function animate() {
+
+		requestAnimationFrame( animate );
+		cx+=0.5;
+		//cy++
+		controls.update();
+		//camera.position.set( cx, cy,1200  );
+		camera.lookAt( cx,cy,0 );
+		TWEEN.update();
+
+
+		render();
+//		renderer.render( scene, camera );
+		stats.update();
+
+
+	}
+
+	function render() {
+
+		var time = Date.now() * 0.001;
+
+		var rx = Math.sin( time * 0.7 ) * 0.2;
+		var ry = Math.sin( time * 0.3 ) * 0.1;
+		var rz = Math.sin( time * 0.2 ) * 0.1;
+		//scene.rotation.x += .001;
+
+		renderer.render( scene, camera );
+
+	}
+
+	function loadFont() {
+		var loader = new THREE.FontLoader();
+		loader.load( 'fonts/' + fontName + '_' + fontWeight + '.typeface.json', function ( response ) {
+			font = response;
+			createText();
+		});
+
+
+	}
+
+	function createLogo() {
+
+		textGeo = new THREE.TextGeometry( text, {
+			font: font,
+			size: size,
+			height: height,
+			curveSegments: curveSegments,
+			bevelThickness: bevelThickness,
+			bevelSize: bevelSize,
+			bevelEnabled: bevelEnabled,
+			material: 0,
+			extrudeMaterial: 1
+		});
+
+		textGeo.computeBoundingBox();
+		textGeo.computeVertexNormals();
+
+		var centerOffset = -0.5 * ( textGeo.boundingBox.max.x - textGeo.boundingBox.min.x );
+
+		textMesh1 = new THREE.Mesh( textGeo, material );
+//
+		textMesh1.position.x = centerOffset;
+		textMesh1.position.y = hover;
+		textMesh1.position.z = 1000;
+		textMesh1.rotation.x = 0;
+		textMesh1.rotation.y = Math.PI * 2;
+
+		group.add( textMesh1 );
+
+	}
+	function createText() {
+		group.remove( textMesh1 );
+		textGeo = new THREE.TextGeometry( text, {
+			font: font,
+			size: size,
+			height: height,
+			curveSegments: curveSegments,
+			bevelThickness: bevelThickness,
+			bevelSize: bevelSize,
+			bevelEnabled: bevelEnabled,
+			material: 0,
+			extrudeMaterial: 1
+		});
+
+		textGeo.computeBoundingBox();
+		textGeo.computeVertexNormals();
+
+		var centerOffset = -0.5 * ( textGeo.boundingBox.max.x - textGeo.boundingBox.min.x );
+
+		textMesh1 = new THREE.Mesh( textGeo, material );
+		textMesh1.position.x = centerOffset;
+		textMesh1.position.y = hover;
+		textMesh1.position.z = 1000;
+		textMesh1.rotation.x = 0;
+		textMesh1.rotation.y = Math.PI * 2;
+
+		group.add( textMesh1 );
+
+	}
+
+</script>
+
+</body>
+</html>
