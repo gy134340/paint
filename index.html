@@ -163,9 +163,9 @@
 </div>
 </body>
 <script src="js/three.min.js"></script>
-<script src="js/renderers/Projector.js"></script>
-<script src="js/libs/stats.min.js"></script>
-<script src="js/controls/TrackballControls.js"></script>
+<!-- <script src="js/renderers/Projector.js"></script> -->
+<!-- <script src="js/libs/stats.min.js"></script> -->
+<!-- <script src="js/controls/TrackballControls.js"></script> -->
 <script src="js/libs/tween.min.js"></script>
 <script src="js/libs/jquery-1.11.1.min.js"></script>
 <script src="js/libs/drawingboard.min.js"></script>
@@ -222,20 +222,20 @@ function init () {
 	container.append(renderer.domElement);
 
 	// 统计
-	stats = new Stats();
-	container.appendChild(stats.dom);
+	// stats = new Stats();
+	// container.appendChild(stats.dom);
 
 	// 控制器
-	controls = new THREE.TrackballControls( camera, renderer.domElement );
-	controls.speed = 5;
-	// controls.noPan = false;
-	// controls.noZoom = false;
-	controls.rotateSpeed = 1.0;
-	controls.zoomSpeed = 1.2;
-	controls.panSpeed = 0.8;
+	// controls = new THREE.TrackballControls( camera, renderer.domElement );
+	// controls.speed = 5;
+	// // controls.noPan = false;
+	// // controls.noZoom = false;
+	// controls.rotateSpeed = 1.0;
+	// controls.zoomSpeed = 1.2;
+	// controls.panSpeed = 0.8;
 
-	controls.staticMoving = true;
-	controls.dynamicDampingFactor = 0.3;
+	// controls.staticMoving = true;
+	// controls.dynamicDampingFactor = 0.3;
 
 	window.addEventListener( 'resize', onWindowResize, false );
 }
@@ -356,7 +356,7 @@ function cubesLocation(dt){
 
 					var cubeSpread = new TWEEN.Tween(cube.position)
 								.to({x:poiX, y:poiY, z:poiZ}, Math.random() * 1000 + 2000 )
-								.easing( TWEEN.Easing.Exponential.In );
+								.easing( TWEEN.Easing.Exponential.InOut );
 					var cubeIn  = new TWEEN.Tween(cube.position)
 								.to({x:inX, y:inY, z:inZ}, Math.random() * 500 + 1500 )
 								.easing( TWEEN.Easing.Exponential.Out );
@@ -383,7 +383,7 @@ function render(){
 		theta += 0.05;  // 自动渲染
 		camera.position.x = radius * Math.sin( THREE.Math.degToRad( theta ) );
 		camera.position.z = radius * Math.cos( THREE.Math.degToRad( theta ) );
-		console.log('theta', theta);
+		// console.log('theta', theta);
 	}else{
 		if(radius < 4000){
 			radius += 3;
@@ -405,8 +405,8 @@ function animate () {
 
 	render();
 	TWEEN.update();
-	stats.update();
-	controls.update();
+	// stats.update();
+	// controls.update();
 }
 
 init();
