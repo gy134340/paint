@@ -187,7 +187,7 @@ var mouse = new THREE.Vector2();	// 点向量
 mouse.x = 0;
 mouse.y = 0;
 
-var cubes = [];
+var cubes = [], tmpCubes = [];
 
 var winWidth = window.innerWidth;
 var winHeight = window.innerHeight;
@@ -280,6 +280,7 @@ function addBoard(){
 		e.preventDefault();
 		isPainted = false;
 		$(board).fadeIn(700);
+		restoreCubes();
 		$("button.drawing-board-control-navigation-reset").trigger('click');
 	});
 
@@ -293,6 +294,16 @@ function addBoard(){
 	});
 }
 
+function restoreCubes(){
+
+	for(var i = 0, len = tmpCubes.length; i < len; i++){
+		var tmp = tmpCubes.pop();
+		var x = Math.random() * 10000 - 5000;
+		var y = Math.random() * 10000 - 5000;
+		var z = Math.random() * 8000 - 4000;
+		tmp.position.set(x, y, z);
+	}
+}
 
 // processed text data
 function getPaintData(){
@@ -352,6 +363,7 @@ function cubesLocation(dt){
 					cubeIn.chain(cubeSpread);
 					cubeIn.start();
 					cubeIndex++;
+					tmpCubes.push(cube);
 				}			
 			}
 		}
