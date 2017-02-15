@@ -352,7 +352,7 @@ function cubesLocation(dt){
 					var poiZ = Math.random() * 10;
 					var inX = Math.random() * 400 - 300 + Math.random() * 500;
 					var inY = Math.random() * 400 - 50 - Math.random() * 500;
-					var inZ = Math.random() * 100 + 1500;
+					var inZ = camera.position.z - 600;
 
 					var cubeSpread = new TWEEN.Tween(cube.position)
 								.to({x:poiX, y:poiY, z:poiZ}, Math.random() * 1000 + 2000 )
