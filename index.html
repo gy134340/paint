@@ -28,7 +28,7 @@
 			color:#fff;
 			position: absolute;
 			font-size: 20px;
-			top:10px;
+			top:20px;
 			-webkit-transform:translateX(-50%);
 			transform: translateX(-50%);
 			left:50%;
@@ -51,19 +51,19 @@
 		}
 		.event{
 			position: absolute;
-			top:78%;
+			top:77%;
 			left:50%;
 			-webkit-transform:translate(-50%,-50%);
 			transform:translate(-50%,-50%);
 			width:180px;
-			height: 30px;
+			height: 28px;
 			display: -webkit-box;
 			display: box;
 		}
 		.event .sub{
 			width: auto;
 			border: 1px solid #fff;
-			margin:0 8px;
+			margin:0 10px;
 			cursor: pointer;
 			color:#fff;
 			text-align: center;
@@ -79,9 +79,42 @@
 			color:#000;
 		}
 		.sub p{
-			line-height: 30px;
+			line-height: 26px;
 			font-size: 18px;
+			color:#fff;
 			text-align: center;
+		}
+		.canvas_input{
+			width: 220px;
+			height:30px;
+			padding-left: 80px;
+			padding-bottom: 4px;
+			position: absolute;
+			top:70%;
+			left:50%;
+			-webkit-transform:translate(-50%,-50%);
+			transform:translate(-50%,-50%);
+			background: transparent;
+			border-bottom:1px solid #666;
+		}
+		.canvas_input:after{
+			content:'或者输入:';
+			display: block;
+			height:30px;
+			line-height: 30px;
+			position: absolute;
+			left:0;
+			bottom:0;
+			color:#999;
+		}
+		#cinput{
+			color: #ccc;
+			border: none;
+			font-size: 24px;
+			display: inline-block;
+			background-color: transparent;
+			width: 100%;
+			height: 100%;
 		}
 		button.drawing-board-control-navigation-reset{
 			display: none;
@@ -133,6 +166,7 @@
 			color: #ccc;
 		}
 
+
 	</style>
 	<!-- baidu统计 -->
 	<script>
@@ -155,6 +189,10 @@
 			<div class="go sub"><p> G o </p></div>
 		</div> -->
 	</div>
+	<div class="canvas_input">
+		<input type="text" id="cinput" maxlength="11">
+	</div>
+	
 	<div class="event">
 		<div class="reset sub drawing-board-control-navigation-reset"><p>Reset</p></div>
 		<div class="go sub"><p> G o </p></div>
@@ -195,6 +233,7 @@ var camera,scene,renderer,controls;
 var raycaster;			// 点击发出的一条射线
 var isPainted = false;
 var mouse = new THREE.Vector2();	// 点向量
+// var hash;
 mouse.x = 0;
 mouse.y = 0;
 
@@ -224,6 +263,7 @@ function init () {
 	// 添加小块
 	setCubes();
 	addBoard();
+	execHash();
 	
 	// renderer 
 	renderer = new THREE.WebGLRenderer( {antialias: true} );
@@ -249,6 +289,41 @@ function init () {
 	// controls.dynamicDampingFactor = 0.3;
 
 	window.addEventListener( 'resize', onWindowResize, false );
+
+	$("body").on('click','.event .reset', function(e){
+		e.preventDefault();
+		isPainted = false;
+
+		$("#cinput").prop('value','');
+		$(".canvas_input").show();
+		$(board).fadeIn(700);
+		restoreCubes();
+		$("button.drawing-board-control-navigation-reset").trigger('click');
+	});
+
+	$("body").on('click','.event .go', function(e){
+		e.preventDefault();
+		isPainted = true;
+		$(".canvas_input").hide();
+		$(board).hide();
+
+		var cInput = $("#cinput").prop('value');
+		if(cInput.length > 0){
+			window.location.hash = cInput;
+			execHash(0);	
+		}
+
+		var dt = getPaintData();
+		cubesLocation(dt);		
+	});
+}
+
+// 如果url里面有hash值
+window.onload = function(){
+	var hash = window.location.hash;
+	if($.trim(hash.slice(1))){
+		$(".event .go").trigger('click');
+	}	
 }
 
 var updateCube = function(){
@@ -286,23 +361,52 @@ function addBoard(){
 		],
 		webStorage: false
 	});
+}
 
-	$("body").on('click','.event .reset', function(e){
-		e.preventDefault();
-		isPainted = false;
-		$(board).fadeIn(700);
-		restoreCubes();
-		$("button.drawing-board-control-navigation-reset").trigger('click');
-	});
+// window.onhashchange = function(){
+// 	execHash(1);
+// }
 
-	$("body").on('click','.event .go', function(e){
-		e.preventDefault();
+// 0不显示，1显示
+function execHash(flag){
+	var hash = window.location.hash;
+	if(hash.length > 1){
+		hash = $.trim(hash.slice(1));
+		if(hash){
+			// var arr = hash.split('');
+			// var re = /[\u4e00-\u9fa5]/;
+			// var num = 0;
+			// for(var i = 0; i < arr.length; i++){
+			// 	if(re.test(arr[i])){
+			// 		num++;
+			// 	}
+			// 	num++
+			// }
+			// if(num > 10){
+			// 	hash = hash.slice(0,10);
+			// }
+			
+			paintText(hash, flag);	
+		}
+	}
+}
 
-		isPainted = true;
-		$(board).fadeOut(700);
-		var dt = getPaintData();
-		cubesLocation(dt);
-	});
+function paintText(text, flag){
+	canvas = document.querySelectorAll('.drawing-board-canvas')[0];
+	var cHeight = canvas.height;
+	var cWidth = canvas.width;
+	var ctx = canvas.getContext('2d');
+	ctx.font = 'lighter 120px sans-serif';
+	ctx.fontWeight = '900';
+	// ctx.fillStyle = '#001';
+	if(flag === 1){
+		ctx.fillStyle = '#fff';
+	}else{
+		ctx.fillStyle = '#001';
+	}
+	
+	ctx.fillText(text,5,cHeight/2);
+	// console.log('num',text);
 }
 
 function restoreCubes(){
@@ -312,7 +416,12 @@ function restoreCubes(){
 		var x = Math.random() * 10000 - 5000;
 		var y = Math.random() * 10000 - 5000;
 		var z = Math.random() * 8000 - 4000;
-		tmp.position.set(x, y, z);
+		// tmp.position.set(x, y, z);
+		new TWEEN.Tween(tmp.position)
+			.to({x:x, y:y, z:z}, Math.random() * 500 + 1000 )
+			.delay(200)
+			.easing( TWEEN.Easing.Exponential.Out )
+			.start();
 	}
 }
 
@@ -358,8 +467,8 @@ function cubesLocation(dt){
 				var cube = cubes[cubeIndex];
 				if(cube){
 	
-					var poiX = i * xSpace - 1000 + Math.random() * 80;
-					var poiY = 600 - j * ySpace + Math.random() * 80;
+					var poiX = i * xSpace - 1000 + Math.random() * 40;
+					var poiY = 600 - j * ySpace + Math.random() * 40;
 					var poiZ = Math.random() * 10;
 					var inX = Math.random() * 400 - 300 + Math.random() * 500;
 					var inY = Math.random() * 400 - 50 - Math.random() * 500;
@@ -387,7 +496,7 @@ var radius = 4000;
 function render(){
 	
 	if(isPainted === true){
-		if(radius > 2000){
+		if(radius > 1700){
 			radius -= 8;
 		}
 		
