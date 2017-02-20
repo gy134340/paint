@@ -7,6 +7,6 @@ paint 3D
 
 2.输入中英文文字，也可映射到空间中
 
-3.如果URL中有hash值，也可以在load时直接进入效果,例如:http://www.134340.space/#t h r e e
+3.如果URL中有hash值，也可以在load时直接进入效果,例如:http://www.134340.space/#three
 
 ###### 两块钱的域名买多了，随便解析一个上去耍耍
