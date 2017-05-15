@@ -2,11 +2,11 @@
 
 ### A drawing board made with Three.js and canvas
 
-1. paint with your mouse,click Go button
+1. paint with your mouse,click Go 
 
 2. input words,also works
 
-3. if hash exists in URL,you can see the it when page load,for example,http://www.134340.space/#three
+3. if hash exists in URL,you can see  it when page load,for example,http://www.134340.space/#three
 
 
 
